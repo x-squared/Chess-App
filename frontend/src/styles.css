@@ -1,0 +1,410 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #111827;
+  background: #f3f4f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+.app h1 {
+  margin: 0 0 0.8rem;
+  font-size: 1.4rem;
+}
+
+.app-panel {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.board {
+  width: min(100%, 560px);
+  aspect-ratio: 1 / 1;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #374151;
+  background: #ececd7;
+}
+
+.board .cg-wrap {
+  width: 100%;
+  height: 100%;
+}
+
+.board cg-board {
+  background: repeating-conic-gradient(#7389b6 0 25%, #ececd7 0 50%) 0 0 / 25% 25%;
+}
+
+.board .cg-wrap piece {
+  filter: drop-shadow(0 0 0.45px rgba(0, 0, 0, 0.35));
+}
+
+.cg-wrap piece.pawn.white {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/wp.svg") !important;
+}
+.cg-wrap piece.knight.white {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/wn.svg") !important;
+}
+.cg-wrap piece.bishop.white {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/wb.svg") !important;
+}
+.cg-wrap piece.rook.white {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/wr.svg") !important;
+}
+.cg-wrap piece.queen.white {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/wq.svg") !important;
+}
+.cg-wrap piece.king.white {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/wk.svg") !important;
+}
+.cg-wrap piece.pawn.black {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/bp.svg") !important;
+}
+.cg-wrap piece.knight.black {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/bn.svg") !important;
+}
+.cg-wrap piece.bishop.black {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/bb.svg") !important;
+}
+.cg-wrap piece.rook.black {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/br.svg") !important;
+}
+.cg-wrap piece.queen.black {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/bq.svg") !important;
+}
+.cg-wrap piece.king.black {
+  background-image: url("/vendor/canvaschess/img/pieces/merida/bk.svg") !important;
+}
+
+.board cg-board square.last-move {
+  background-color: rgba(255, 0, 0, 0.24);
+}
+
+.board cg-board square.selected {
+  background-color: rgba(255, 0, 0, 0.32);
+}
+
+.board cg-board square.move-dest {
+  background: radial-gradient(rgba(52, 70, 163, 0.45) 24%, rgba(0, 0, 0, 0) 26%);
+}
+
+.board .cg-wrap coords {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 10px;
+}
+
+.board .orientation-white .ranks :nth-child(odd),
+.board .orientation-white .files :nth-child(even),
+.board .orientation-black .ranks :nth-child(even),
+.board .orientation-black .files :nth-child(odd) {
+  color: rgba(34, 45, 92, 0.85);
+}
+
+.board .orientation-white .ranks :nth-child(even),
+.board .orientation-white .files :nth-child(odd),
+.board .orientation-black .ranks :nth-child(odd),
+.board .orientation-black .files :nth-child(even) {
+  color: rgba(246, 248, 255, 0.9);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.controls button,
+.pgn-actions button {
+  border: 1px solid #6b7280;
+  background: #f9fafb;
+  color: #111827;
+  border-radius: 6px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.inline-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: #374151;
+}
+
+.inline-control input[type="range"] {
+  width: 120px;
+}
+
+.controls button:disabled,
+.pgn-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.status {
+  margin: 0 0 0.8rem;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.pgn-area label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.pgn-area textarea {
+  width: 100%;
+  min-height: 170px;
+  padding: 0.7rem;
+  border: 1px solid #9ca3af;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  resize: vertical;
+}
+
+.pgn-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.55rem;
+}
+
+.error {
+  color: #b91c1c;
+  margin: 0;
+}
+
+.text-editor-wrap {
+  margin-top: 0.9rem;
+  padding: 0.7rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.text-editor-title {
+  margin: 0 0 0.45rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+.text-editor {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #111827;
+  white-space: pre-wrap;
+}
+
+.text-editor-block {
+  margin: 0;
+}
+
+.text-editor-block + .text-editor-block {
+  margin-top: 0.22rem;
+}
+
+.text-editor-mainline {
+  margin: 0;
+  font-weight: 700;
+}
+
+.text-editor-main-move {
+  font-weight: 700;
+}
+
+.text-editor-main-comment {
+  margin-top: 0;
+  color: #1f2937;
+  margin-left: 0;
+  padding-left: 0;
+  text-indent: 0;
+}
+
+.text-editor-variation-move {
+  font-weight: 400;
+}
+
+.text-editor-comment {
+  color: #374151;
+  font-weight: 400;
+}
+
+.text-editor-comment-block {
+  display: inline;
+  margin-left: 0;
+  padding-left: 0;
+  text-indent: 0;
+}
+
+.text-editor-comment-block:focus {
+  outline: 1px dashed #9ca3af;
+  background: #eef2ff;
+}
+
+.text-editor-run-bold {
+  font-weight: 700;
+}
+
+.text-editor-run-italic {
+  font-style: italic;
+}
+
+.text-editor-run-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: #e5e7eb;
+  border-radius: 4px;
+  padding: 0 0.18rem;
+}
+
+.text-editor-soft-break {
+  display: none;
+}
+
+.text-editor-space {
+  display: inline-block;
+  width: 0.5ch;
+}
+
+.text-editor-main-resume-break {
+  display: none;
+}
+
+.text-editor-variation-move-number,
+.text-editor-result,
+.text-editor-nag {
+  color: #4b5563;
+}
+
+.text-editor-move-number-token::after {
+  content: ". ";
+}
+
+.text-editor-move-number-token[data-move-number-side="black"]::after {
+  content: "... ";
+}
+
+.text-editor-paren,
+.text-editor-bracket {
+  color: #4b5563;
+}
+
+.text-editor-anchor {
+  display: none;
+}
+
+.ast-view {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.dom-view {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #1f2937;
+}
+
+.ast-root,
+.ast-item {
+  margin: 0.2rem 0;
+}
+
+.ast-node {
+  color: #111827;
+}
+
+.ast-children {
+  margin-left: 0.9rem;
+  padding-left: 0.55rem;
+  border-left: 1px solid #d1d5db;
+}
+
+.ast-game {
+  font-weight: 700;
+}
+
+.ast-variation {
+  color: #1d4ed8;
+}
+
+.ast-move {
+  color: #065f46;
+}
+
+.ast-comment {
+  color: #7c2d12;
+}
+
+.ast-meta,
+.ast-header-item,
+.ast-headers {
+  color: #4b5563;
+}
+
+.moves {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.92rem;
+  color: #1f2937;
+}
+
+.moves-label {
+  font-weight: 600;
+  margin-right: 0.35rem;
+}
+
+.moves-empty {
+  color: #4b5563;
+}
+
+.moves-list {
+  display: inline;
+}
+
+.move {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  margin-right: 0.55rem;
+}
+
+.move-number::after {
+  content: ".";
+  margin-right: 0.1rem;
+}
+
+.move-white.skip::before {
+  content: "...";
+  color: #6b7280;
+  margin-right: 0.18rem;
+}
+
+.move-black:empty,
+.move-white:empty {
+  display: none;
+}
