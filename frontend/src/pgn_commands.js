@@ -119,6 +119,13 @@ const makeComment = (id, raw = "") => ({
   runs: parseCommentRuns(raw),
 });
 
+const INDENT_DIRECTIVE_PREFIX = /^\s*(?:\\i(?:\s+|$))+/;
+const withLeadingIndentDirective = (rawText) => {
+  const source = String(rawText ?? "");
+  if (INDENT_DIRECTIVE_PREFIX.test(source)) return source;
+  return source.trim() ? `\\i ${source}` : "\\i";
+};
+
 const getNearestAfterComment = (move) => {
   if (!Array.isArray(move?.postItems)) return null;
   for (const item of move.postItems) {
@@ -179,6 +186,71 @@ export const findExistingCommentIdAroundMove = (model, moveId, position = "after
   const safePosition = position === "before" ? "before" : "after";
   const existing = findExistingAroundMoveInVariation(model.root, moveId, safePosition);
   return existing?.id ?? null;
+};
+
+const normalizeMovePostItems = (move) => {
+  if (Array.isArray(move.postItems) && move.postItems.length > 0) return;
+  move.postItems = [];
+  if (Array.isArray(move.commentsAfter)) {
+    move.commentsAfter.forEach((comment) => move.postItems.push({ type: "comment", comment }));
+  }
+  if (Array.isArray(move.ravs)) {
+    move.ravs.forEach((rav) => move.postItems.push({ type: "rav", rav }));
+  }
+};
+
+export const applyDefaultIndentDirectives = (model) => {
+  const next = cloneModel(model);
+  let maxId = 0;
+  visitVariation(
+    next.root,
+    () => {},
+    (comment) => {
+      const match = String(comment.id || "").match(/^comment_(\d+)$/);
+      if (!match) return;
+      const numeric = Number(match[1]);
+      if (Number.isFinite(numeric)) maxId = Math.max(maxId, numeric);
+    },
+  );
+  const createIndentComment = () => makeComment(`comment_${++maxId}`, "\\i");
+
+  const walkVariation = (variation) => {
+    for (let idx = 0; idx < variation.entries.length; idx += 1) {
+      const entry = variation.entries[idx];
+      if (entry.type === "variation") {
+        const prev = variation.entries[idx - 1];
+        if (prev?.type === "comment") {
+          prev.raw = withLeadingIndentDirective(prev.raw);
+          prev.runs = parseCommentRuns(prev.raw);
+        } else {
+          variation.entries.splice(idx, 0, createIndentComment());
+          idx += 1;
+        }
+        walkVariation(entry);
+        continue;
+      }
+      if (entry.type !== "move") continue;
+      normalizeMovePostItems(entry);
+      for (let postIdx = 0; postIdx < entry.postItems.length; postIdx += 1) {
+        const item = entry.postItems[postIdx];
+        if (item.type !== "rav" || !item.rav) continue;
+        const prev = entry.postItems[postIdx - 1];
+        if (prev?.type === "comment" && prev.comment) {
+          prev.comment.raw = withLeadingIndentDirective(prev.comment.raw);
+          prev.comment.runs = parseCommentRuns(prev.comment.raw);
+        } else {
+          const inserted = createIndentComment();
+          entry.postItems.splice(postIdx, 0, { type: "comment", comment: inserted });
+          entry.commentsAfter.push(inserted);
+          postIdx += 1;
+        }
+        walkVariation(item.rav);
+      }
+    }
+  };
+
+  walkVariation(next.root);
+  return next;
 };
 
 const insertAroundMoveInVariation = (variation, moveId, position, comment) => {

@@ -5,6 +5,7 @@ import "./styles.css";
 import { text_editor } from "./text_editor";
 import { parsePgnToModel } from "./pgn_model";
 import {
+  applyDefaultIndentDirectives,
   findExistingCommentIdAroundMove,
   insertCommentAroundMove,
   removeCommentById,
@@ -26,6 +27,7 @@ const translations = {
   "pgn.placeholder":
     "Paste or drop PGN text here.\n\nExample:\n1. e4 e5 2. Nf3 Nc6 3. Bb5 a6",
   "pgn.load": "Load PGN",
+  "pgn.defaultIndent": "Default indent",
   "pgn.loaded": "PGN loaded.",
   "pgn.error": "Unable to parse PGN.",
   "pgn.formatted.label": "text_editor",
@@ -61,6 +63,8 @@ const state = {
   isAnimating: false,
   animationRunId: 0,
   verboseMoves: [],
+  movePositionById: {},
+  boardPreview: null,
   statusMessage: "",
   errorMessage: "",
   pendingFocusCommentId: null,
@@ -98,6 +102,7 @@ app.innerHTML = `
         )}"></textarea>
         <div class="pgn-actions">
           <button id="btn-load" type="button">${t("pgn.load", "Load PGN")}</button>
+          <button id="btn-default-indent" type="button">${t("pgn.defaultIndent", "Default indent")}</button>
           <p id="error" class="error"></p>
         </div>
         <div class="text-editor-wrap">
@@ -128,6 +133,7 @@ const btnPrev = document.querySelector("#btn-prev");
 const btnNext = document.querySelector("#btn-next");
 const btnLast = document.querySelector("#btn-last");
 const btnLoad = document.querySelector("#btn-load");
+const btnDefaultIndent = document.querySelector("#btn-default-indent");
 const speedInput = document.querySelector("#speed-input");
 const speedValue = document.querySelector("#speed-value");
 const soundInput = document.querySelector("#sound-input");
@@ -216,6 +222,52 @@ const buildGameAtPly = (ply) => {
   const game = new Chess();
   for (let i = 0; i < ply; i += 1) game.move(state.moves[i]);
   return game;
+};
+
+const cloneGame = (game) => {
+  const next = new Chess();
+  next.load(game.fen());
+  return next;
+};
+
+const buildMovePositionById = (pgnModel) => {
+  const index = {};
+  if (!pgnModel?.root) return index;
+
+  const walkVariation = (variation, baseGame, isMainline, mainlinePly) => {
+    const game = cloneGame(baseGame);
+    let ply = mainlinePly;
+    for (const entry of variation.entries) {
+      if (entry.type === "variation") {
+        walkVariation(entry, game, false, ply);
+        continue;
+      }
+      if (entry.type !== "move") continue;
+      let moved;
+      try {
+        moved = game.move(entry.san);
+      } catch {
+        moved = null;
+      }
+      if (!moved) continue;
+      if (isMainline) ply += 1;
+      index[entry.id] = {
+        fen: game.fen(),
+        lastMove: moved.from && moved.to ? [moved.from, moved.to] : null,
+        mainlinePly: isMainline ? ply : null,
+      };
+      if (Array.isArray(entry.postItems)) {
+        entry.postItems.forEach((item) => {
+          if (item.type === "rav" && item.rav) walkVariation(item.rav, game, false, ply);
+        });
+      } else if (Array.isArray(entry.ravs)) {
+        entry.ravs.forEach((child) => walkVariation(child, game, false, ply));
+      }
+    }
+  };
+
+  walkVariation(pgnModel.root, new Chess(), true, 0);
+  return index;
 };
 
 const stripAnnotationsForBoardParser = (source) => {
@@ -352,6 +404,14 @@ const renderMoveList = () => {
 
 const renderBoard = (game) => {
   if (!board) return;
+  if (state.boardPreview) {
+    board.set({
+      fen: state.boardPreview.fen,
+      lastMove: state.boardPreview.lastMove || undefined,
+      animation: { enabled: true, duration: state.moveDelayMs },
+    });
+    return;
+  }
   const lastMove = state.currentPly > 0
     ? (() => {
       const vm = state.verboseMoves[state.currentPly - 1];
@@ -422,6 +482,25 @@ const getTextEditorOptions = () => ({
     syncChessParseState(state.pgnText);
     render();
   },
+  onMoveSelect: (moveId) => {
+    const target = state.movePositionById?.[moveId];
+    if (!target) return;
+    if (Number.isInteger(target.mainlinePly)) {
+      if (target.mainlinePly === state.currentPly) {
+        state.boardPreview = null;
+        render();
+        return;
+      }
+      state.boardPreview = null;
+      gotoPly(target.mainlinePly);
+      return;
+    }
+    state.boardPreview = {
+      fen: target.fen,
+      lastMove: target.lastMove,
+    };
+    render();
+  },
 });
 
 const focusCommentById = (commentId) => {
@@ -444,7 +523,9 @@ const render = () => {
   renderBoard(game);
 
   if (statusEl) {
-    statusEl.textContent = `${t("status.label", "Position")}: ${state.currentPly}/${state.moves.length}`;
+    statusEl.textContent = state.boardPreview
+      ? `${t("status.label", "Position")}: preview`
+      : `${t("status.label", "Position")}: ${state.currentPly}/${state.moves.length}`;
   }
   renderMoveList();
   if (errorEl) {
@@ -481,6 +562,7 @@ const gotoPly = async (nextPly) => {
 
   const direction = bounded > state.currentPly ? 1 : -1;
   const runId = ++state.animationRunId;
+  state.boardPreview = null;
   state.isAnimating = true;
   render();
 
@@ -511,6 +593,8 @@ const syncChessParseState = (source, { clearOnFailure = false } = {}) => {
     state.moves = [];
     state.verboseMoves = [];
     state.currentPly = 0;
+    state.movePositionById = {};
+    state.boardPreview = null;
     state.errorMessage = "";
     return;
   }
@@ -520,6 +604,8 @@ const syncChessParseState = (source, { clearOnFailure = false } = {}) => {
     state.moves = parser.history();
     state.verboseMoves = parser.history({ verbose: true });
     state.currentPly = Math.min(state.currentPly, state.moves.length);
+    state.movePositionById = buildMovePositionById(state.pgnModel);
+    state.boardPreview = null;
     state.errorMessage = "";
   } catch {
     try {
@@ -528,6 +614,8 @@ const syncChessParseState = (source, { clearOnFailure = false } = {}) => {
       state.moves = fallbackParser.history();
       state.verboseMoves = fallbackParser.history({ verbose: true });
       state.currentPly = Math.min(state.currentPly, state.moves.length);
+      state.movePositionById = buildMovePositionById(state.pgnModel);
+      state.boardPreview = null;
       state.errorMessage = "";
     } catch {
       if (clearOnFailure) {
@@ -537,6 +625,8 @@ const syncChessParseState = (source, { clearOnFailure = false } = {}) => {
         state.moves = [];
         state.verboseMoves = [];
         state.currentPly = 0;
+        state.movePositionById = {};
+        state.boardPreview = null;
       }
     }
   }
@@ -563,6 +653,15 @@ if (btnPrev) btnPrev.addEventListener("click", () => gotoPly(state.currentPly - 
 if (btnNext) btnNext.addEventListener("click", () => gotoPly(state.currentPly + 1));
 if (btnLast) btnLast.addEventListener("click", () => gotoPly(state.moves.length));
 if (btnLoad) btnLoad.addEventListener("click", loadPgn);
+if (btnDefaultIndent) {
+  btnDefaultIndent.addEventListener("click", () => {
+    state.pgnModel = applyDefaultIndentDirectives(state.pgnModel);
+    state.pgnText = serializeModelToPgn(state.pgnModel);
+    if (pgnInput) pgnInput.value = state.pgnText;
+    syncChessParseState(state.pgnText);
+    render();
+  });
+}
 
 if (speedInput) {
   speedInput.addEventListener("input", () => {

@@ -18,13 +18,13 @@ const syncDataset = (el, dataset) => {
   });
 };
 
-const createInlineEl = (token) => {
+const createInlineEl = (token, options) => {
   const span = document.createElement("span");
-  syncInlineEl(span, token);
+  syncInlineEl(span, token, options);
   return span;
 };
 
-const syncInlineEl = (el, token) => {
+const syncInlineEl = (el, token, options) => {
   syncClassName(el, token.className || "");
   syncDataset(el, {
     kind: toSegmentKind(token),
@@ -33,6 +33,13 @@ const syncInlineEl = (el, token) => {
     ...(token.dataset || {}),
   });
   if (el.textContent !== token.text) el.textContent = token.text;
+  if (token.tokenType === "move" && token.dataset?.nodeId) {
+    el.onclick = () => {
+      if (options?.onMoveSelect) options.onMoveSelect(token.dataset.nodeId);
+    };
+  } else {
+    el.onclick = null;
+  }
 };
 
 const createCommentEl = (token, options) => {
@@ -100,12 +107,12 @@ const syncCommentEl = (el, token, options) => {
 
 const createTokenEl = (token, options) => {
   if (token.kind === "comment") return createCommentEl(token, options);
-  return createInlineEl(token);
+  return createInlineEl(token, options);
 };
 
 const syncTokenEl = (el, token, options) => {
   if (token.kind === "comment") syncCommentEl(el, token, options);
-  else syncInlineEl(el, token);
+  else syncInlineEl(el, token, options);
 };
 
 const createAnchorEl = (anchorId) => {
@@ -316,10 +323,8 @@ const setupMoveInsertOverlay = (container, options) => {
       if (event.target.closest(".text-editor-insert-icon")) return;
       const moveId = overlay.dataset.moveId || "";
       if (!moveId) return;
-      const rect = overlay.getBoundingClientRect();
-      const clickX = event.clientX - rect.left;
-      const side = clickX < rect.width / 2 ? "before" : "after";
-      triggerInsertAtSide(moveId, side);
+      const onMoveSelect = container._textEditorOptions?.onMoveSelect;
+      if (onMoveSelect) onMoveSelect(moveId);
     });
     overlay.addEventListener("mouseenter", () => {
       clearHideTimer();
