@@ -25,7 +25,12 @@ const createInlineEl = (token, options) => {
 };
 
 const syncInlineEl = (el, token, options) => {
-  syncClassName(el, token.className || "");
+  const isSelectedMove = token.tokenType === "move"
+    && token.dataset?.nodeId
+    && options?.selectedMoveId
+    && token.dataset.nodeId === options.selectedMoveId;
+  const nextClassName = `${token.className || ""}${isSelectedMove ? " text-editor-move-selected" : ""}`;
+  syncClassName(el, nextClassName.trim());
   syncDataset(el, {
     kind: toSegmentKind(token),
     tokenType: token.tokenType,
@@ -243,7 +248,7 @@ const getMoveTokenFromEvent = (container, event) => {
 const positionOverlayAtMove = (container, overlay, moveEl) => {
   const containerRect = container.getBoundingClientRect();
   const moveRect = moveEl.getBoundingClientRect();
-  const horizontalPadding = 12;
+  const horizontalPadding = 6;
   overlay.style.left = `${moveRect.left - containerRect.left + moveRect.width / 2}px`;
   overlay.style.top = `${moveRect.top - containerRect.top + moveRect.height / 2}px`;
   overlay.style.width = `${moveRect.width + horizontalPadding * 2}px`;
@@ -277,7 +282,7 @@ const setupMoveInsertOverlay = (container, options) => {
         overlay.classList.remove("visible");
         overlay.dataset.moveId = "";
         activeMoveEl = null;
-      }, 220);
+      }, 110);
     };
     const leftBtn = overlay.querySelector(".text-editor-insert-icon.left");
     const rightBtn = overlay.querySelector(".text-editor-insert-icon.right");

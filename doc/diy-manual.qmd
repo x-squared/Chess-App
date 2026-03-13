@@ -1,0 +1,108 @@
+# DIY Manual
+
+Practical command cookbook for running Chess-App end-to-end from terminal cells (including Quarto).
+
+Use this from repository root unless a section says otherwise.
+
+## Quick Start (Most Used)
+
+> Note: Start backend and frontend in separate terminals because both commands are long-running.
+
+### 1) Check and remove stale dev processes (recommended before start)
+
+```{bash}
+cd /Users/stephan/Workspace/AppSpace/Chess-App
+echo "Before cleanup:"
+lsof -i tcp:8000 || true
+lsof -i tcp:5173 || true
+
+# Graceful stop first
+lsof -ti tcp:8000 | xargs -r kill -15
+lsof -ti tcp:5173 | xargs -r kill -15
+sleep 1
+
+# If still running, force stop
+lsof -ti tcp:8000 | xargs -r kill -9
+lsof -ti tcp:5173 | xargs -r kill -9
+
+echo "After cleanup:"
+lsof -i tcp:8000 || true
+lsof -i tcp:5173 || true
+```
+
+### 2) Start backend (Terminal A)
+
+```{bash}
+cd /Users/stephan/Workspace/AppSpace/Chess-App/backend
+
+# Optional: first-time setup
+# python3 -m venv .venv
+# source .venv/bin/activate
+# pip install -r requirements.txt
+
+source .venv/bin/activate
+uvicorn app.main:app --reload
+```
+
+### 3) Start frontend (Terminal B)
+
+```{bash}
+cd /Users/stephan/Workspace/AppSpace/Chess-App/frontend
+
+# Optional: first-time setup
+# npm install
+
+npm run dev
+```
+
+### 4) Verify both services are up
+
+```{bash}
+curl -sS http://localhost:8000/health
+open http://localhost:5173
+```
+
+## Useful Scripts
+
+### Install/update dependencies
+
+```{bash}
+cd /Users/stephan/Workspace/AppSpace/Chess-App/backend
+source .venv/bin/activate
+pip install -r requirements.txt
+
+cd /Users/stephan/Workspace/AppSpace/Chess-App/frontend
+npm install
+```
+
+### Build frontend for production
+
+```{bash}
+cd /Users/stephan/Workspace/AppSpace/Chess-App/frontend
+npm run build
+```
+
+### Run backend only (without auto-reload)
+
+```{bash}
+cd /Users/stephan/Workspace/AppSpace/Chess-App/backend
+source .venv/bin/activate
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+### Quick health check loop
+
+```{bash}
+while true; do
+  date
+  curl -sS http://localhost:8000/health || echo "backend not reachable"
+  sleep 2
+done
+```
+
+### Stop local dev services quickly
+
+```{bash}
+lsof -ti tcp:8000 | xargs -r kill -9
+lsof -ti tcp:5173 | xargs -r kill -9
+```

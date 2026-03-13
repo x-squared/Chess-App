@@ -2,6 +2,19 @@
   font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   color: #111827;
   background: #f3f4f6;
+  --board-background-image: url("/board-assets/img/boards/merida-blue.svg");
+  --piece-wp-image: url("/canvaschess/img/pieces/merida/wp.svg");
+  --piece-wn-image: url("/canvaschess/img/pieces/merida/wn.svg");
+  --piece-wb-image: url("/canvaschess/img/pieces/merida/wb.svg");
+  --piece-wr-image: url("/canvaschess/img/pieces/merida/wr.svg");
+  --piece-wq-image: url("/canvaschess/img/pieces/merida/wq.svg");
+  --piece-wk-image: url("/canvaschess/img/pieces/merida/wk.svg");
+  --piece-bp-image: url("/canvaschess/img/pieces/merida/bp.svg");
+  --piece-bn-image: url("/canvaschess/img/pieces/merida/bn.svg");
+  --piece-bb-image: url("/canvaschess/img/pieces/merida/bb.svg");
+  --piece-br-image: url("/canvaschess/img/pieces/merida/br.svg");
+  --piece-bq-image: url("/canvaschess/img/pieces/merida/bq.svg");
+  --piece-bk-image: url("/canvaschess/img/pieces/merida/bk.svg");
 }
 
 * {
@@ -13,7 +26,7 @@ body {
 }
 
 .app {
-  max-width: 860px;
+  max-width: 1720px;
   margin: 0 auto;
   padding: 1.25rem;
 }
@@ -30,10 +43,17 @@ body {
   padding: 1rem;
 }
 
+.board-editor-box {
+  display: grid;
+  grid-template-columns: minmax(320px, 560px) minmax(320px, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+  margin-bottom: 0.9rem;
+}
+
 .board {
-  width: min(100%, 560px);
+  width: 100%;
   aspect-ratio: 1 / 1;
-  margin-bottom: 1rem;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid #374151;
@@ -46,7 +66,12 @@ body {
 }
 
 .board cg-board {
-  background: repeating-conic-gradient(#7389b6 0 25%, #ececd7 0 50%) 0 0 / 25% 25%;
+  background-image:
+    var(--board-background-image),
+    repeating-conic-gradient(#7389b6 0 25%, #ececd7 0 50%);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover, 25% 25%;
 }
 
 .board .cg-wrap piece {
@@ -54,40 +79,40 @@ body {
 }
 
 .cg-wrap piece.pawn.white {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/wp.svg") !important;
+  background-image: var(--piece-wp-image) !important;
 }
 .cg-wrap piece.knight.white {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/wn.svg") !important;
+  background-image: var(--piece-wn-image) !important;
 }
 .cg-wrap piece.bishop.white {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/wb.svg") !important;
+  background-image: var(--piece-wb-image) !important;
 }
 .cg-wrap piece.rook.white {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/wr.svg") !important;
+  background-image: var(--piece-wr-image) !important;
 }
 .cg-wrap piece.queen.white {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/wq.svg") !important;
+  background-image: var(--piece-wq-image) !important;
 }
 .cg-wrap piece.king.white {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/wk.svg") !important;
+  background-image: var(--piece-wk-image) !important;
 }
 .cg-wrap piece.pawn.black {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/bp.svg") !important;
+  background-image: var(--piece-bp-image) !important;
 }
 .cg-wrap piece.knight.black {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/bn.svg") !important;
+  background-image: var(--piece-bn-image) !important;
 }
 .cg-wrap piece.bishop.black {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/bb.svg") !important;
+  background-image: var(--piece-bb-image) !important;
 }
 .cg-wrap piece.rook.black {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/br.svg") !important;
+  background-image: var(--piece-br-image) !important;
 }
 .cg-wrap piece.queen.black {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/bq.svg") !important;
+  background-image: var(--piece-bq-image) !important;
 }
 .cg-wrap piece.king.black {
-  background-image: url("/vendor/canvaschess/img/pieces/merida/bk.svg") !important;
+  background-image: var(--piece-bk-image) !important;
 }
 
 .board cg-board square.last-move {
@@ -200,6 +225,80 @@ body {
   background: #f9fafb;
 }
 
+.board-editor-pane {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.toolbar-box {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 0.55rem;
+}
+
+.editor-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.55rem;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.move-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 0.3rem;
+}
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.icon-button img {
+  width: 18px;
+  height: 18px;
+}
+
+.icon-button:hover {
+  background: #f3f4f6;
+}
+
+.icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
+
 .text-editor-title {
   margin: 0 0 0.45rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -212,11 +311,20 @@ body {
   font-size: 0.9rem;
   line-height: 1.45;
   color: #111827;
+  background: #ffffff;
   white-space: pre-wrap;
   position: relative;
+  padding: 4px 0 8px;
   min-height: 340px;
   max-height: 62vh;
   overflow-y: auto;
+}
+
+.board-editor-pane .text-editor {
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  flex: 1;
 }
 
 .text-editor-block {
@@ -299,6 +407,25 @@ body {
   margin: 0 0.2rem;
   padding: 0 0.16rem;
   border-radius: 4px;
+}
+
+.text-editor-move-selected {
+  z-index: 0;
+  isolation: isolate;
+}
+
+.text-editor-move-selected::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: -4px;
+  bottom: -4px;
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  border-radius: 4px;
+  background: rgba(239, 246, 255, 0.42);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .text-editor [data-token-type="move"] {
@@ -398,6 +525,10 @@ body {
   content: ". ";
 }
 
+.text-editor-move-number-token {
+  margin-left: 0;
+}
+
 .text-editor-move-number-token[data-move-number-side="black"]::after {
   content: "... ";
 }
@@ -420,7 +551,7 @@ body {
   background: rgba(239, 246, 255, 0.42);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 120ms ease;
+  transition: opacity 60ms ease;
   z-index: 6;
 }
 
@@ -553,4 +684,14 @@ body {
 .move-black:empty,
 .move-white:empty {
   display: none;
+}
+
+@media (max-width: 980px) {
+  .board-editor-box {
+    grid-template-columns: 1fr;
+  }
+
+  .board-editor-pane .text-editor {
+    min-height: 300px;
+  }
 }
